@@ -1,0 +1,25 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+    <id>bundle</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>${project.artifactId}-${project.version}.jar</include>
+                <include>${project.artifactId}-${project.version}.jar.asc</include>
+                <include>${project.artifactId}-${project.version}-sources.jar</include>
+                <include>${project.artifactId}-${project.version}-sources.jar.asc</include>
+                <include>${project.artifactId}-${project.version}-javadoc.jar</include>
+                <include>${project.artifactId}-${project.version}-javadoc.jar.asc</include>
+                <include>${project.artifactId}-${project.version}.pom</include>
+                <include>${project.artifactId}-${project.version}.pom.asc</include>
+            </includes>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>

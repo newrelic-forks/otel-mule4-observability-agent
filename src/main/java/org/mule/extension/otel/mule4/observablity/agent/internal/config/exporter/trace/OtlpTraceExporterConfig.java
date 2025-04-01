@@ -43,7 +43,7 @@ public class OtlpTraceExporterConfig implements OtlpExporterConfig
 	@Summary(value = "Target URL to which the OTLP Exporter sends traces. Must be a URL with " +
 	                 "a scheme of either http or https based on the use of TLS.")
     @Optional(defaultValue = "")
-	@Example(value = "http://mycollector.com:4317/v1/traces")
+	@Example(value = "https://otlp.nr-data.net:4318/v1/traces")
 	private String traceCollectorEndpoint;
 
 	@Parameter

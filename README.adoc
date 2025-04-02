@@ -45,34 +45,22 @@ Issues* to provide feedback, suggest enhancements or report a bug.
 
 == Link to the Extension jar file
 
-The latest version of the extension, `otel-mule4-observability-agent-{revnumber}-mule-plugin.jar` can be downloaded from link:{extension-jar-filepath}[here].
+## Release Notes
 
-== Release Notes
+### Version 1.0.2 [New Relic Labs ]
 
-=== Version 1.3.0
-* https://github.com/rickbansal-mulesoft/otel-mule4-observability-agent/tree/main/target/otel-mule4-observability-agent-{revnumber}-mule-plugin.jar[available here]
-* Added support user defined custom attributes/tags
-** Custom attributes/tags can defined in the overall configuration
-** User can optionally select if the custom attributes will be generated per flow, per message processor or both
-* Updated README documentation 
+- **Dependency**
 
-=== Version 1.2.0
-* https://github.com/rickbansal-mulesoft/otel-mule4-observability-agent/tree/main/target/otel-mule4-observability-agent-1.2.0-mule-plugin.jar[available here]
-* Updated OTel SDK to version 1.27.0
-* Added support to allow for OTel Collector endpoints using self-signed certificates.
-* Added support for dynamic resolution of configuration properties
-* Added support for generating and exporting distributed traces across the Anypoint MQ transport
-** Context propagation across Anypoint MQ flows is accomplished via WC3 Trace Headers inserted as AMQ user properties
-* Added support for OTel Metrics
-** Supported Metrics:
-*** Heap Usage
-*** Workload Utilization
-** Added a new configuration editor for Metrics Collector configuration
-* Updated README documentation 
-
-=== Version 1.0.2 
-* https://github.com/rickbansal-mulesoft/otel-mule4-observability-agent/tree/main/target/otel-mule4-observability-agent-1.0.2-mule-plugin.jar[available here]
-* Initial release
+```xml
+  <dependency>
+      <groupId>com.newrelic.labs</groupId>
+      <artifactId>otel-mule4-observability-agent</artifactId>
+      <version>1.0.2</version>
+      <classifier>mule-plugin</classifier>
+  </dependency>
+```
+- **JDK 17 Release**: This version is compatible with JDK 17.
+- **Mule Runtime 4.9.2**: Ensure your Mule environment is running version 4.9.2 for compatibility.
 
 
 == Links to the documentation

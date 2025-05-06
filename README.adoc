@@ -47,6 +47,31 @@ Issues* to provide feedback, suggest enhancements or report a bug.
 
 ## Release Notes
 
+### Version 1.4.15 [New Relic Labs ]
+
+- **Add following dependency to applications pom.xml**
+
+```xml
+  <dependency>
+      <groupId>com.newrelic.labs</groupId>
+      <artifactId>otel-mule4-observability-agent</artifactId>
+      <version>1.4.15</version>
+      <classifier>mule-plugin</classifier>
+  </dependency>
+```
+- **Header Control**: You can now configure the headers to be dropped from being sent to New Relic.
+
+The sections to follow :
+
+Global Element Properties -> OLTP Trace Exporter -> Custom Attributes -> Headers to be exluded ....
+
+[Default values ]  - mw_client_id,mw_client_secret
+
+![image](https://github.com/user-attachments/assets/7382244f-29a4-4416-947b-52cea2b8fff4)
+
+- **JDK 17 Release**: This version is compatible with JDK 17.
+- **Mule Runtime 4.9.2**: Ensure your Mule environment is running version 4.9.2 for compatibility.
+
 ### Version 1.0.2 [New Relic Labs ]
 
 - **Dependency**

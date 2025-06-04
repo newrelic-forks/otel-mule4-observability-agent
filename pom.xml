@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.newrelic.labs</groupId>
     <artifactId>otel-mule4-observability-agent</artifactId>
-    <version>1.4.14</version>
+    <version>1.4.15</version>
     <packaging>mule-extension</packaging>
     <name>OpenTelemetry Mule 4 Observability Agent Extension</name>
 
@@ -255,9 +255,9 @@
     </developers>
 
         <scm>
-        <connection>scm:git:git://github.com/gsidhwani-nr/otel-mule4-observability-agent-jdk17.git</connection>
-        <developerConnection>scm:git:ssh://github.com/gsidhwani-nr/otel-mule4-observability-agent-jdk17.git</developerConnection>
-        <url>https://github.com/gsidhwani-nr/otel-mule4-observability-agent-jdk17</url>
+        <connection>scm:git:git://github.com/newrelic-forks/otel-mule4-observability-agent-jdk17.git</connection>
+        <developerConnection>scm:git:ssh://github.com/newrelic-forks/otel-mule4-observability-agent-jdk17.git</developerConnection>
+        <url>https://github.com/newrelic-forks/otel-mule4-observability-agent-jdk17</url>
     </scm>
 
     <repositories>

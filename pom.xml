@@ -4,11 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.newrelic.labs</groupId>
+     <groupId>com.newrelic.labs</groupId>   
     <artifactId>otel-mule4-observability-agent</artifactId>
-    <version>1.4.15</version>
+    <version>1.5.0</version>
     <packaging>mule-extension</packaging>
     <name>OpenTelemetry Mule 4 Observability Agent Extension</name>
+    <description>OpenTelemetry Mule 4 Observability Agent Extension for New Relic</description>
+    <url>https://github.com/newrelic-forks/otel-mule4-observability-agent/tree/nr-jdk17</url>
 
     <properties>
         <java.version>17</java.version>
@@ -28,25 +30,7 @@
 
     <build>
         <plugins>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>3.3.0</version>
-            <configuration>
-                <descriptors>
-                    <descriptor>src/assembly/bundle.xml</descriptor>
-                </descriptors>
-            </configuration>
-            <executions>
-                <execution>
-                    <id>make-assembly</id>
-                    <phase>package</phase>
-                    <goals>
-                        <goal>single</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
+            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -225,11 +209,11 @@
         </dependency>
     </dependencies>
 
-    <distributionManagement>
+        <distributionManagement>
         <repository>
             <id>ossrh</id>
             <name>Sonatype OSSRH</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/</url>
         </repository>
         <snapshotRepository>
             <id>ossrh</id>
@@ -257,7 +241,7 @@
         <scm>
         <connection>scm:git:git://github.com/newrelic-forks/otel-mule4-observability-agent-jdk17.git</connection>
         <developerConnection>scm:git:ssh://github.com/newrelic-forks/otel-mule4-observability-agent-jdk17.git</developerConnection>
-        <url>https://github.com/newrelic-forks/otel-mule4-observability-agent-jdk17</url>
+        <url>https://github.com/newrelic-forks/otel-mule4-observability-agent/tree/nr-jdk17</url>
     </scm>
 
     <repositories>

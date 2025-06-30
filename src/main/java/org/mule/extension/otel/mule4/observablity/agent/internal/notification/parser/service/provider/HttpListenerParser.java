@@ -97,9 +97,20 @@ public class HttpListenerParser extends BaseNotificationParser
 			MultiMap<String, String> requestHeaders = httpRequestAttributes.getHeaders();
 
 			spanBuilder.setAttribute("scheme", httpRequestAttributes.getScheme());
-			spanBuilder.setAttribute("method", httpRequestAttributes.getMethod());
+			spanBuilder.setAttribute("http.method", httpRequestAttributes.getMethod()); 
 			spanBuilder.setAttribute("remote.address", httpRequestAttributes.getRemoteAddress());
 			spanBuilder.setAttribute("request.path", httpRequestAttributes.getRequestPath());
+			   // ADDED: Setting http.target for better transaction naming in APM tools
+            // This is a standard OpenTelemetry semantic convention for the full request target
+            String requestPath = httpRequestAttributes.getRequestPath();
+            String queryString = httpRequestAttributes.getQueryString();
+            String httpTarget = requestPath;
+            if (queryString != null && !queryString.isEmpty()) {
+                httpTarget += "?" + queryString;
+            }
+            spanBuilder.setAttribute("http.target", httpTarget);
+         // OPTIONAL: If you have configured routing (e.g., using a base path/route)
+             spanBuilder.setAttribute("http.route", httpRequestAttributes.getListenerPath()); 
 
 			// Obtain excluded headers
 			Set<String> excludedHeadersSet = new HashSet<>();

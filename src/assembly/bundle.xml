@@ -10,8 +10,6 @@
         <fileSet>
             <directory>${project.build.directory}</directory>
             <includes>
-                <include>${project.artifactId}-${project.version}.jar</include>
-                <include>${project.artifactId}-${project.version}.jar.asc</include>
 		<include>${project.artifactId}-${project.version}-mule-plugin.jar</include>
                 <include>${project.artifactId}-${project.version}-mule-plugin.jar.asc</include>
                 <include>${project.artifactId}-${project.version}-sources.jar</include>

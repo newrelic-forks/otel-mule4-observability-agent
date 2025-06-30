@@ -32,6 +32,10 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricErrors;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricLatency;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricTraffic;
+
 /**
  * This is a Singleton class represents a connection to the local OpenTelemetry SDK.  
  * Any component requiring access to the SDK will need to retrieve the <b>shared connection</b> 
@@ -98,6 +102,8 @@ public final class OtelSdkConnection
 			//	For now, only resource and exporter properties have editors; however, in the future,
 			//	this will/could be expanded to include metric and log property editors.
 			//----------------------------------------------------------------------------------------
+			// ADD THIS LOG STATEMENT
+			logger.info("OpenTelemetry Service Name configured from resource config: {}", otelSdkConfig.getResourceConfig().getServiceName());
 			if (otelSdkConfig.getResourceConfig() != null)
 			{
 				configMap.putAll(otelSdkConfig.getResourceConfig().getProperties());
@@ -129,6 +135,9 @@ public final class OtelSdkConnection
 		
 		MuleMetricMemoryUsage.setInstance(openTelemetry);
 		MuleMetricSystemWorkload.setInstance(openTelemetry);
+		MuleMetricErrors.setInstance(openTelemetry);
+		MuleMetricTraffic.setInstance(openTelemetry);
+		MuleMetricLatency.setInstance(openTelemetry);
 	}
 
 	public void invalidate()

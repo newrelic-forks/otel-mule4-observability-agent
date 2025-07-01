@@ -2,6 +2,7 @@ package org.mule.extension.otel.mule4.observablity.agent.internal.config.advance
 
 import java.util.List;
 
+import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.extension.otel.mule4.observablity.agent.internal.config.resource.Attribute;
 import org.mule.extension.otel.mule4.observablity.agent.internal.util.Constants;
 import org.mule.runtime.api.meta.ExpressionSupport;
@@ -39,6 +40,7 @@ public class CustomAttributesConfig
     @Optional (defaultValue = "false")
     @Expression(ExpressionSupport.NOT_SUPPORTED)
     private boolean sendCustomAttributesPerProcessor;
+  
     
     @Parameter
     @Placement(order = 50, tab = "OTLP Trace Exporter")
@@ -48,6 +50,16 @@ public class CustomAttributesConfig
     @Expression(ExpressionSupport.NOT_SUPPORTED)
     @Summary("List of user defined custom attributes in name-value pairs.")
     private List<Attribute> customAttributes;
+   
+
+    
+    @Parameter
+    @Placement(order = 60, tab = "OTLP Trace Exporter")
+    @DisplayName("Headers to be excluded due to security reasons")
+    @Optional(defaultValue = "mw_client_id,mw_client_secret")
+    @Summary("Enter your custom headers as a comma-separated list to be excluded from being sent to New Relic")
+	@Example(value = "mw_client_id,mw_client_secret")
+    private String exludedHeaders;
     
     private static Logger logger = LoggerFactory.getLogger(CustomAttributesConfig.class);
 
@@ -66,6 +78,11 @@ public class CustomAttributesConfig
         return this.customAttributes;
     }
     
+    public String getExcludedHeaders()
+    {
+        return this.exludedHeaders;
+    }
+    
     public void setAttributes(SpanBuilder spanBuilder, ExpressionManager em, EnrichedServerNotification n) 
     {
         try
@@ -77,4 +94,6 @@ public class CustomAttributesConfig
             logger.debug(e.getMessage());
         }
     }    
+    
+    
 }

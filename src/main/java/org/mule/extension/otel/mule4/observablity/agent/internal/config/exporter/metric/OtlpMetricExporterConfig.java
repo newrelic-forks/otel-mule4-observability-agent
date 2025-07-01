@@ -47,7 +47,7 @@ public class OtlpMetricExporterConfig implements OtlpExporterConfig
     @Summary(value = "Target URL to which the OTLP Exporter sends metrics. Must be a URL with " +
                      "a scheme of either http or https based on the use of TLS.")
     @Optional(defaultValue = "")
-    @Example(value = "http://mycollector.com:4317/v1/metrics")
+    @Example(value = "https://otlp.nr-data.net:4318/v1/metrics")
     private String metricCollectorEndpoint;
 
     @Parameter

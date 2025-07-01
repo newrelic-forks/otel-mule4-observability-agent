@@ -1,13 +1,14 @@
 = Mule 4 OpenTelemetry (OTel) Agent Extension
 // Document header
 Rick Bansal <rick.bansal@mulesoft.com>
-:revnumber: 1.3.0
-:revdate: June 27, 2023
+Gulab Sidhwani <gsidhwani@newrelic.com>
+:revnumber: 1.5.0
+:revdate: July 01, 2025
 :revremark: 
 :doctype: book
 :icons: font
 :toc: left
-:keywords: Mule, MuleSoft, Observability, OpenTelemetry, OTel, Tracing, Instrumentation, Distributed
+:keywords: Mule, MuleSoft, Observability, OpenTelemetry, OTel, Tracing, Instrumentation, Distributed, Golden Metrics
 
 // The following pass through will align the images and their titles
 ifndef::env-github[]
@@ -45,34 +46,83 @@ Issues* to provide feedback, suggest enhancements or report a bug.
 
 == Link to the Extension jar file
 
-The latest version of the extension, `otel-mule4-observability-agent-{revnumber}-mule-plugin.jar` can be downloaded from link:{extension-jar-filepath}[here].
+## Release Notes
 
-== Release Notes
+### Version 1.5.0 [New Relic Labs ]
 
-=== Version 1.3.0
-* https://github.com/rickbansal-mulesoft/otel-mule4-observability-agent/tree/main/target/otel-mule4-observability-agent-{revnumber}-mule-plugin.jar[available here]
-* Added support user defined custom attributes/tags
-** Custom attributes/tags can defined in the overall configuration
-** User can optionally select if the custom attributes will be generated per flow, per message processor or both
-* Updated README documentation 
+#### ✨ **New Features & Enhancements in v1.5.0**
 
-=== Version 1.2.0
-* https://github.com/rickbansal-mulesoft/otel-mule4-observability-agent/tree/main/target/otel-mule4-observability-agent-1.2.0-mule-plugin.jar[available here]
-* Updated OTel SDK to version 1.27.0
-* Added support to allow for OTel Collector endpoints using self-signed certificates.
-* Added support for dynamic resolution of configuration properties
-* Added support for generating and exporting distributed traces across the Anypoint MQ transport
-** Context propagation across Anypoint MQ flows is accomplished via WC3 Trace Headers inserted as AMQ user properties
-* Added support for OTel Metrics
-** Supported Metrics:
-*** Heap Usage
-*** Workload Utilization
-** Added a new configuration editor for Metrics Collector configuration
-* Updated README documentation 
+This version focuses on providing deeper insights into your application's performance and health, aligning with industry best practices for observability.
 
-=== Version 1.0.2 
-* https://github.com/rickbansal-mulesoft/otel-mule4-observability-agent/tree/main/target/otel-mule4-observability-agent-1.0.2-mule-plugin.jar[available here]
-* Initial release
+1.  **Golden Signals Metrics Implementation**:
+
+    * **Latency (`mule.flow.latency`, `mule.processor.latency`)**: We've added detailed histogram metrics to measure the duration of Mule flow executions and individual message processor invocations. This provides critical insights into response times and helps identify performance bottlenecks. Latency is reported in milliseconds.
+
+    * **Traffic (`mule.flow.traffic.total`, `mule.processor.traffic.total`)**: New counter metrics now track the total number of Mule flow executions and message processor invocations. This helps you understand the load and throughput of your application.
+
+    * **Errors (`mule.flow.errors.total`, `mule.processor.errors.total`)**: Counter metrics have been introduced to count errors occurring within Mule flow executions and message processor invocations. This provides immediate visibility into the reliability of your application.
+
+2.  **Enhanced Distributed Tracing Attributes**:
+
+    * **Standard HTTP Semantic Conventions**: For HTTP Listener spans, we now explicitly set `http.target` (full request path including query string) and `http.route` (the templated path configured in the listener). Crucially, the HTTP method is now correctly reported using the standard `http.method` attribute. These changes ensure that APM tools can accurately name and group your web transactions, eliminating "unknown" labels.
+
+3.  **Existing Metrics Maintained**:
+
+    * The extension continues to report **JVM Heap Memory Usage (`jvm.memory.heap.usage`)** and **System Workload Utilization (`system.workload.utilization`)**, providing foundational insights into runtime resource consumption.
+
+
+- **Add following dependency to applications pom.xml**
+
+```xml
+  <dependency>
+      <groupId>com.newrelic.labs</groupId>
+      <artifactId>otel-mule4-observability-agent</artifactId>
+      <version>1.5.0</version>
+      <classifier>mule-plugin</classifier>
+  </dependency>
+```
+
+### Version 1.4.15 [New Relic Labs ]
+
+#### ✨ **New Features & Enhancements in v1.4.15**
+
+- **Add following dependency to applications pom.xml**
+
+```xml
+  <dependency>
+      <groupId>com.newrelic.labs</groupId>
+      <artifactId>otel-mule4-observability-agent</artifactId>
+      <version>1.4.15</version>
+      <classifier>mule-plugin</classifier>
+  </dependency>
+```
+- **Header Control**: You can now configure the headers to be dropped from being sent to New Relic.
+
+The sections to follow :
+
+Global Element Properties -> OLTP Trace Exporter -> Custom Attributes -> Headers to be exluded ....
+
+[Default values ]  - mw_client_id,mw_client_secret
+
+![image](https://github.com/user-attachments/assets/7382244f-29a4-4416-947b-52cea2b8fff4)
+
+- **JDK 17 Release**: This version is compatible with JDK 17.
+- **Mule Runtime 4.9.2**: Ensure your Mule environment is running version 4.9.2 for compatibility.
+
+### Version 1.0.2 [New Relic Labs ]
+
+- **Dependency**
+
+```xml
+  <dependency>
+      <groupId>com.newrelic.labs</groupId>
+      <artifactId>otel-mule4-observability-agent</artifactId>
+      <version>1.0.2</version>
+      <classifier>mule-plugin</classifier>
+  </dependency>
+```
+- **JDK 17 Release**: This version is compatible with JDK 17.
+- **Mule Runtime 4.9.2**: Ensure your Mule environment is running version 4.9.2 for compatibility.
 
 
 == Links to the documentation

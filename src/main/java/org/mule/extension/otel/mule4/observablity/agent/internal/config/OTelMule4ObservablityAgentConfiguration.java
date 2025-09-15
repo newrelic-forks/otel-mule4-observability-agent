@@ -7,6 +7,11 @@ import org.mule.extension.otel.mule4.observablity.agent.internal.config.exporter
 import org.mule.extension.otel.mule4.observablity.agent.internal.config.resource.OTelResourceConfig;
 import org.mule.extension.otel.mule4.observablity.agent.internal.connection.OTelMule4ObservablityAgentConnectionProvider;
 import org.mule.extension.otel.mule4.observablity.agent.internal.connection.OtelSdkConnection;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricErrors;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricLatency;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricMemoryUsage;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricSystemWorkload;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricTraffic;
 import org.mule.extension.otel.mule4.observablity.agent.internal.notification.OTelMuleNotificationHandler;
 import org.mule.extension.otel.mule4.observablity.agent.internal.notification.listener.MuleMessageProcessorNotificationListener;
 import org.mule.extension.otel.mule4.observablity.agent.internal.notification.listener.MulePipelineNotificationListener;
@@ -22,6 +27,9 @@ import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.opentelemetry.api.OpenTelemetry;
+
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Startable;
 import org.mule.runtime.api.notification.NotificationListenerRegistry;
@@ -163,7 +171,24 @@ public class OTelMule4ObservablityAgentConfiguration implements Startable
 	public void start() throws MuleException
 	{
 		logger.info("OTelMule4ObservablityAgentConfiguration starting");
-
+// Initialize metrics singletons
+	OtelSdkConnection otelSdkConnectionInstance = OtelSdkConnection.getInstance(
+    new OTelSdkConfig(
+        getResource(),
+        getTraceExporter(),
+        getMetricExporter(),
+        muleConfiguration,
+        getSpanGenerationConfig(),
+        expressionManager,
+        getCustomAttributesConfig()
+    )
+);
+OpenTelemetry otel = otelSdkConnectionInstance.getOpenTelemetry().orElseThrow(() -> new IllegalStateException("OpenTelemetry instance not available"));
+	MuleMetricTraffic.setInstance(otel);
+	MuleMetricLatency.setInstance(otel);
+	MuleMetricErrors.setInstance(otel);
+	MuleMetricMemoryUsage.setInstance(otel);
+	MuleMetricSystemWorkload.setInstance(otel);
 		//------------------------------------------------------------------------------
 		// Skip the startup if tracing is disabled
 		//------------------------------------------------------------------------------

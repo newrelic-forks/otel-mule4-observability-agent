@@ -57,9 +57,9 @@ public class LoggerParser extends BaseNotificationParser
 		// ----------------------------------------------------------------------------------------
 		if (loggerOutput != null && notification.getException() == null)
 		{
-			Attributes eventAttributes = Attributes.of(AttributeKey.stringKey("logger.output"), loggerOutput);
+			Attributes eventAttributes = Attributes.of(AttributeKey.stringKey("custom.logger.output"), loggerOutput);
 			span.addEvent("logger.output.event", eventAttributes);
 		}
-	}
+	} 
 	
 }

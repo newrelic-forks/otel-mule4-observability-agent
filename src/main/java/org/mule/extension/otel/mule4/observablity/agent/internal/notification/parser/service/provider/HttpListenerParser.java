@@ -71,10 +71,7 @@ public class HttpListenerParser extends BaseNotificationParser
 
 			HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getMessageAttributes(notification);
 
-			// ------------------------------------------------------------------------------------
-			// 	Copy over any WC3 Trace Headers from the incoming Http request into the current
-			//	trace context
-			// ------------------------------------------------------------------------------------
+			// Extract context from incoming HTTP request
 			Context context = OTelContextPropagator.extract(httpRequestAttributes, new HttpRequestAttributesGetter());
 			spanBuilder.setParent(context);	
 		}
@@ -85,63 +82,86 @@ public class HttpListenerParser extends BaseNotificationParser
 
 		return spanBuilder;
 	}
+	
 
 	// --------------------------------------------------------------------------------------------
 	// Annotate the span with various HTTP Listener attributes
 	// --------------------------------------------------------------------------------------------
-	private SpanBuilder addHttpListenerAttributesToSpan(EnrichedServerNotification notification,
-			SpanBuilder spanBuilder) {
-		HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getMessageAttributes(notification);
+	private SpanBuilder addHttpListenerAttributesToSpan(EnrichedServerNotification notification, SpanBuilder spanBuilder) {
+    HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getMessageAttributes(notification);
 
-		try {
-			MultiMap<String, String> requestHeaders = httpRequestAttributes.getHeaders();
+    // Mandatory OTEL attributes for HTTP server spans/metrics
+    spanBuilder.setAttribute("http.request.method", httpRequestAttributes.getMethod()); // mandatory
+    spanBuilder.setAttribute("url.scheme", httpRequestAttributes.getScheme()); // mandatory
+	// Try to get status code from headers if available
+	String statusCode = null;
+	if (httpRequestAttributes.getHeaders() != null && httpRequestAttributes.getHeaders().containsKey("status")) {
+		statusCode = httpRequestAttributes.getHeaders().get("status");
+	}
+	spanBuilder.setAttribute("http.response.status_code", statusCode); // mandatory if available
+	spanBuilder.setAttribute("http.route", httpRequestAttributes.getListenerPath()); // mandatory if available
 
-			spanBuilder.setAttribute("scheme", httpRequestAttributes.getScheme());
-			spanBuilder.setAttribute("http.method", httpRequestAttributes.getMethod()); 
-			spanBuilder.setAttribute("remote.address", httpRequestAttributes.getRemoteAddress());
-			spanBuilder.setAttribute("request.path", httpRequestAttributes.getRequestPath());
-			   // ADDED: Setting http.target for better transaction naming in APM tools
-            // This is a standard OpenTelemetry semantic convention for the full request target
-            String requestPath = httpRequestAttributes.getRequestPath();
-            String queryString = httpRequestAttributes.getQueryString();
-            String httpTarget = requestPath;
-            if (queryString != null && !queryString.isEmpty()) {
-                httpTarget += "?" + queryString;
-            }
-            spanBuilder.setAttribute("http.target", httpTarget);
-         // OPTIONAL: If you have configured routing (e.g., using a base path/route)
-             spanBuilder.setAttribute("http.route", httpRequestAttributes.getListenerPath()); 
+	// Optional attributes if available
+	spanBuilder.setAttribute("url.path", httpRequestAttributes.getRequestPath()); // optional
+	spanBuilder.setAttribute("url.query", httpRequestAttributes.getQueryString()); // optional
+	spanBuilder.setAttribute("server.address", httpRequestAttributes.getLocalAddress()); // optional
 
-			// Obtain excluded headers
-			Set<String> excludedHeadersSet = new HashSet<>();
-			OtelSdkConnection otelSdkConnection = OtelSdkConnection.get().orElse(null);
-			 if (otelSdkConnection != null) {
-		            CustomAttributesConfig customAttributesConfig = otelSdkConnection.getCustomAttributesConfig().orElse(null);
-		            if (customAttributesConfig != null) {
-		                String excludedHeaders = customAttributesConfig.getExcludedHeaders();
-		                if (excludedHeaders != null) {
-		                    excludedHeadersSet = Arrays.stream(excludedHeaders.split(","))
-		                                               .map(String::trim) // Trim spaces for each header
-		                                               .collect(Collectors.toSet());
-		                }
-		            }
-		        }
+	// Try to get local port from headers if available
+	String localPort = null;
+	if (httpRequestAttributes.getHeaders() != null && httpRequestAttributes.getHeaders().containsKey("localPort")) {
+		localPort = httpRequestAttributes.getHeaders().get("localPort");
+	}
+	spanBuilder.setAttribute("server.port", localPort); // optional
 
-			// Use lambda expression to apply filtering logic
-	     final Set<String> headersToExclude = excludedHeadersSet; // Make effectively final by using a separate final reference
-	        requestHeaders.forEach((key, collection) -> {
-	            if (!headersToExclude.contains(key)) {
-	            	  spanBuilder.setAttribute("headers." + key, collection);
-	            } else {
-	                logger.debug("Excluding header from span: " + key);
-	            }
-	        });
+	spanBuilder.setAttribute("network.protocol.name", httpRequestAttributes.getScheme() != null ? httpRequestAttributes.getScheme() : "http"); // optional, can be derived
 
-		} catch (Exception e) {
-			logger.debug(e.getMessage());
-		}
+	// Try to get protocol version from headers if available
+	String protocolVersion = null;
+	if (httpRequestAttributes.getHeaders() != null && httpRequestAttributes.getHeaders().containsKey("protocolVersion")) {
+		protocolVersion = httpRequestAttributes.getHeaders().get("protocolVersion");
+	}
+	spanBuilder.setAttribute("network.protocol.version", protocolVersion); // optional
 
-		return spanBuilder;
+	spanBuilder.setAttribute("client.address", httpRequestAttributes.getRemoteAddress()); // optional
+
+	// Try to get User-Agent from headers if available
+	String userAgent = null;
+	if (httpRequestAttributes.getHeaders() != null && httpRequestAttributes.getHeaders().containsKey("User-Agent")) {
+		userAgent = httpRequestAttributes.getHeaders().get("User-Agent");
+	}
+	spanBuilder.setAttribute("user_agent.original", userAgent); // optional
+
+	// Error handling: Try to get error type from headers if available
+	String errorType = null;
+	if (httpRequestAttributes.getHeaders() != null && httpRequestAttributes.getHeaders().containsKey("errorType")) {
+		errorType = httpRequestAttributes.getHeaders().get("errorType");
+	}
+	if (errorType != null) {
+		spanBuilder.setAttribute("error.type", errorType); // mandatory if error
 	}
 
+    // Headers (opt-in, explicit config)
+    MultiMap<String, String> requestHeaders = httpRequestAttributes.getHeaders();
+    Set<String> excludedHeadersSet = new HashSet<String>();
+    OtelSdkConnection otelSdkConnection = OtelSdkConnection.get().orElse(null);
+    if (otelSdkConnection != null) {
+        CustomAttributesConfig customAttributesConfig = otelSdkConnection.getCustomAttributesConfig().orElse(null);
+        if (customAttributesConfig != null) {
+            String excludedHeaders = customAttributesConfig.getExcludedHeaders();
+            if (excludedHeaders != null) {
+                String[] split = excludedHeaders.split(",");
+                for (String header : split) {
+                    excludedHeadersSet.add(header.trim());
+                }
+            }
+        }
+    }
+    for (String key : requestHeaders.keySet()) {
+        if (!excludedHeadersSet.contains(key)) {
+            spanBuilder.setAttribute("http.request.header." + key.toLowerCase(), requestHeaders.getAll(key).toString()); // optional
+        }
+    }
+
+    return spanBuilder;
+}
 }

@@ -1,4 +1,3 @@
-
 package org.mule.extension.otel.mule4.observablity.agent.internal.metric;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -31,16 +30,10 @@ public class MuleMetricLatency {
         logger.info("Initializing the Latency Metrics");
         Meter meter = openTelemetry.getMeter("org.mulesoft.extension.otel.mule4.observability.agent.metrics");
 
-        // Histogram for overall flow latency
+        // Mandatory: Response time
         flowLatencyHistogram = meter.histogramBuilder("mule.flow.latency")
                 .setDescription("Measures the duration of Mule flow executions.")
-                .setUnit("ms") // Milliseconds for latency
-                .build();
-
-        // Histogram for individual message processor latency
-        processorLatencyHistogram = meter.histogramBuilder("mule.processor.latency")
-                .setDescription("Measures the duration of Mule message processor invocations.")
-                .setUnit("ms") // Milliseconds for latency
+                .setUnit("ms")
                 .build();
     }
 

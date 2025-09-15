@@ -56,7 +56,7 @@ public class AnypointMQSubscriberParser extends BaseNotificationParser
                                                  SpanBuilder spanBuilder)
     {
         super.startPipelineNotification(notification, muleConnectorConfigStore, spanBuilder);
-        
+
         try
         {
             spanBuilder.setSpanKind(SpanKind.SERVER);
@@ -64,10 +64,7 @@ public class AnypointMQSubscriberParser extends BaseNotificationParser
 
             AnypointMQMessageAttributes anypointMQMessageAttributes = NotificationParserUtils.getMessageAttributes(notification);
 
-            // ------------------------------------------------------------------------------------
-            //  Copy over any WC3 Trace Headers from the incoming MQ message into the current
-            //  trace context
-            // ------------------------------------------------------------------------------------
+            // Extract context from incoming MQ message
             Context context = OTelContextPropagator.extract(anypointMQMessageAttributes, new AnypointMQMessageAttributesGetter());
             spanBuilder.setParent(context); 
         }
@@ -108,6 +105,11 @@ public class AnypointMQSubscriberParser extends BaseNotificationParser
             spanBuilder.setAttribute("subscriber.message.contentType", anypointMQMessageAttributes.getContentType());            
             spanBuilder.setAttribute("subscriber.destination", anypointMQMessageAttributes.getDestination());
             spanBuilder.setAttribute("subscriber.messageId", anypointMQMessageAttributes.getMessageId());            
+            spanBuilder.setAttribute("messaging.system", "anypointmq");
+            spanBuilder.setAttribute("messaging.destination", anypointMQMessageAttributes.getDestination());
+            spanBuilder.setAttribute("messaging.destination_kind", "queue"); // or "topic"
+            spanBuilder.setAttribute("messaging.operation", "receive");
+            spanBuilder.setAttribute("messaging.message_id", anypointMQMessageAttributes.getMessageId());
         }
         catch (Exception e)
         {
@@ -138,6 +140,10 @@ public class AnypointMQSubscriberParser extends BaseNotificationParser
             spanBuilder.setAttribute("subscriber.path", anypointMQConfig.getPath());     
 
             spanBuilder.setAttribute("subscriber.clientId", anypointMQConfig.getClientId());                    
+            spanBuilder.setAttribute("net.peer.name", anypointMQConfig.getHost());
+            spanBuilder.setAttribute("net.peer.port", anypointMQConfig.getPort());
+            spanBuilder.setAttribute("messaging.url", anypointMQConfig.getPath());
+            spanBuilder.setAttribute("messaging.client_id", anypointMQConfig.getClientId());
         }
         catch (Exception e)
         {

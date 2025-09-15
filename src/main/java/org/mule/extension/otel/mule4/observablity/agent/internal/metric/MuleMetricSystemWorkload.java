@@ -37,7 +37,7 @@ public class MuleMetricSystemWorkload
         osMxBean = ManagementFactory.getOperatingSystemMXBean();
 
         meter.gaugeBuilder("system.workload.utilization")
-             .setDescription("Reports the System Workload Utilization")
+             .setDescription("Reports system workload utilization.")
              .setUnit("percent")
              .buildWithCallback(recordMeasure);    
     }

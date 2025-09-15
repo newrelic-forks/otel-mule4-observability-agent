@@ -299,8 +299,22 @@ public class MuleSoftTraceStore {
 	}
 
 	public Span getMessageProcessorSpan(String mulesoftTraceId, String pipelineId, String messageProcessorId) {
-		return muleSoftTraces.get(mulesoftTraceId).getPipelineSpan(pipelineId).getSpan(messageProcessorId)
-				.getProcessorSpan(); // Access the actual span from the wrapper
+	    MuleSoftTrace trace = muleSoftTraces.get(mulesoftTraceId);
+	    if (trace == null) {
+	        logger.warn("No MuleSoftTrace found for traceId: " + mulesoftTraceId);
+	        return null;
+	    }
+	    MuleSoftTrace.PipelineSpan pipelineSpan = trace.getPipelineSpan(pipelineId);
+	    if (pipelineSpan == null) {
+	        logger.warn("No PipelineSpan found for pipelineId: " + pipelineId + " in traceId: " + mulesoftTraceId);
+	        return null;
+	    }
+	    MuleSoftTrace.PipelineSpan.MessageProcessorSpan spanWrapper = pipelineSpan.getSpan(messageProcessorId);
+	    if (spanWrapper == null) {
+	        logger.warn("No MessageProcessorSpan found for messageProcessorId: " + messageProcessorId + " in pipelineId: " + pipelineId);
+	        return null;
+	    }
+	    return spanWrapper.getProcessorSpan();
 	}
 
 	public void endMessageProcessorSpan(String mulesoftTraceId, String pipelineId, String messageProcessorId,

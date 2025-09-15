@@ -22,9 +22,9 @@ public class MuleMetricErrors {
      * @param openTelemetry The OpenTelemetry instance for metric creation.
      */
     private MuleMetricErrors(OpenTelemetry openTelemetry) {
-        logger.info("Initializing the Error Metrics");
         Meter meter = openTelemetry.getMeter("org.mulesoft.extension.otel.mule4.observability.agent.metrics");
 
+        // Mandatory: Error rate
         flowErrorCounter = meter.counterBuilder("mule.flow.errors.total")
                 .setDescription("Total number of errors in Mule flow executions.")
                 .setUnit("1")

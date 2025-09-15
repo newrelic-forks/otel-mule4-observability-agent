@@ -16,7 +16,12 @@ public class HttpRequestAttributesGetter implements TextMapGetter<HttpRequestAtt
 	@Override
 	public String get(HttpRequestAttributes carrier, String key)
 	{
-		return carrier.getHeaders().get(key);
+	    for (String header : carrier.getHeaders().keySet()) {
+	        if (header.equalsIgnoreCase(key)) {
+	            return carrier.getHeaders().get(header);
+	        }
+	    }
+	    return null;
 	}
 
 }

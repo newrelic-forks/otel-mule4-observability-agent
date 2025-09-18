@@ -1,17 +1,17 @@
 package org.mule.extension.otel.mule4.observablity.agent.internal.notification.parser.service.provider;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.mule.extension.http.api.HttpRequestAttributes;
 import org.mule.extension.otel.mule4.observablity.agent.internal.config.advanced.CustomAttributesConfig;
 import org.mule.extension.otel.mule4.observablity.agent.internal.connection.OtelSdkConnection;
 import org.mule.extension.otel.mule4.observablity.agent.internal.context.propagation.HttpRequestAttributesGetter;
 import org.mule.extension.otel.mule4.observablity.agent.internal.context.propagation.OTelContextPropagator;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricHttp;
 import org.mule.extension.otel.mule4.observablity.agent.internal.store.config.MuleConnectorConfigStore;
 import org.mule.extension.otel.mule4.observablity.agent.internal.util.Constants;
 import org.mule.extension.otel.mule4.observablity.agent.internal.util.NotificationParserUtils;
@@ -19,9 +19,8 @@ import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.notification.EnrichedServerNotification;
 import org.mule.runtime.api.notification.PipelineMessageNotification;
 import org.mule.runtime.api.util.MultiMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -69,7 +68,7 @@ public class HttpListenerParser extends BaseNotificationParser
 			spanBuilder.setSpanKind(SpanKind.SERVER);
 			spanBuilder = addHttpListenerAttributesToSpan(notification, spanBuilder);
 
-			HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getMessageAttributes(notification);
+			HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getHttpRequestAttributes(notification);
 
 			// Extract context from incoming HTTP request
 			Context context = OTelContextPropagator.extract(httpRequestAttributes, new HttpRequestAttributesGetter());
@@ -80,6 +79,13 @@ public class HttpListenerParser extends BaseNotificationParser
 			logger.debug(e.getMessage());
 		}
 
+		try {
+        double durationMs = NotificationParserUtils.getDuration(notification);
+        recordHttpServerMetrics(notification, durationMs);
+    } catch (Exception e) {
+        logger.error("Failed to record HTTP server metrics: {}", e.getMessage(), e);
+    }
+
 		return spanBuilder;
 	}
 	
@@ -88,7 +94,7 @@ public class HttpListenerParser extends BaseNotificationParser
 	// Annotate the span with various HTTP Listener attributes
 	// --------------------------------------------------------------------------------------------
 	private SpanBuilder addHttpListenerAttributesToSpan(EnrichedServerNotification notification, SpanBuilder spanBuilder) {
-    HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getMessageAttributes(notification);
+    HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getHttpRequestAttributes(notification);
 
     // Mandatory OTEL attributes for HTTP server spans/metrics
     spanBuilder.setAttribute("http.request.method", httpRequestAttributes.getMethod()); // mandatory
@@ -162,6 +168,68 @@ public class HttpListenerParser extends BaseNotificationParser
         }
     }
 
+	
+
     return spanBuilder;
 }
+// OTEL-Semantic-Metric Fix-Begin: Add HTTP server metrics
+private void recordHttpServerMetrics(EnrichedServerNotification notification, double durationMs) {
+    HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getHttpRequestAttributes(notification);
+    if (httpRequestAttributes == null) {
+        logger.warn("HttpRequestAttributes are null for notification: {}", notification);
+        return;
+    }
+
+    Attributes attributes = Attributes.builder()
+        .put(AttributeKey.stringKey("http.request.method"), httpRequestAttributes.getMethod())
+        .put(AttributeKey.stringKey("url.scheme"), httpRequestAttributes.getScheme())
+        .put(AttributeKey.stringKey("http.route"), httpRequestAttributes.getListenerPath())
+        .build();
+
+    String statusCodeStr = httpRequestAttributes.getHeaders().get("status");
+    if (statusCodeStr != null) {
+        try {
+            attributes = attributes.toBuilder()
+                .put(AttributeKey.longKey("http.response.status_code"), Long.parseLong(statusCodeStr))
+                .build();
+        } catch (NumberFormatException e) {
+            logger.warn("Failed to parse status code: {}", statusCodeStr, e);
+        }
+    } else {
+        logger.warn("Missing status code in HTTP headers for notification: {}", notification);
+    }
+
+    // Record required metric: http.server.request.duration
+    MuleMetricHttp.getInstance().recordHttpServerRequest(durationMs, attributes);
+
+    // Record optional metric: http.server.request.body.size
+    String requestBodySizeStr = httpRequestAttributes.getHeaders().get("Content-Length");
+    if (requestBodySizeStr != null) {
+        try {
+            long requestBodySize = Long.parseLong(requestBodySizeStr);
+            MuleMetricHttp.getInstance().recordHttpServerRequestBodySize(requestBodySize, attributes);
+        } catch (NumberFormatException e) {
+            logger.warn("Failed to parse request body size: {}", requestBodySizeStr, e);
+        }
+    } else {
+        logger.debug("Content-Length header is missing or null");
+    }
+
+    // Record optional metric: http.server.response.body.size
+    String responseBodySizeStr = httpRequestAttributes.getHeaders().get("response-body-size");
+    if (responseBodySizeStr != null) {
+        try {
+            long responseBodySize = Long.parseLong(responseBodySizeStr);
+            MuleMetricHttp.getInstance().recordHttpServerResponseBodySize(responseBodySize, attributes);
+        } catch (NumberFormatException e) {
+            logger.warn("Failed to parse response body size: {}", responseBodySizeStr, e);
+        }
+    } else {
+        logger.debug("response-body-size header is missing or null");
+    }
+
+    logger.debug("Recorded HTTP server metrics for route: {}", httpRequestAttributes.getListenerPath());
+}
+// OTEL-Semantic-Metric Fix-End
+
 }

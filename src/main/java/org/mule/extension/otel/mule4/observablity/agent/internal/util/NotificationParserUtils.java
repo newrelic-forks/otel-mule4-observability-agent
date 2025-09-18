@@ -1,10 +1,12 @@
 package org.mule.extension.otel.mule4.observablity.agent.internal.util;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+import org.mule.extension.http.api.HttpRequestAttributes;
 import org.mule.extension.otel.mule4.observablity.agent.internal.config.advanced.MuleComponent;
 import org.mule.extension.otel.mule4.observablity.agent.internal.config.advanced.SpanGenerationConfig;
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -12,6 +14,8 @@ import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.notification.EnrichedServerNotification;
 import org.mule.runtime.api.notification.MessageProcessorNotification;
 import org.mule.runtime.api.notification.PipelineMessageNotification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -34,6 +38,8 @@ import org.mule.runtime.api.notification.PipelineMessageNotification;
 @SuppressWarnings("restriction")
 public class NotificationParserUtils
 {
+	private static final Logger logger = LoggerFactory.getLogger(NotificationParserUtils.class);
+
 	// --------------------------------------------------------------------------------------------
 	// Various public utility parsing helpers
 	// --------------------------------------------------------------------------------------------
@@ -218,4 +224,25 @@ public class NotificationParserUtils
 	{
 		return (T) notification.getComponent().getAnnotation(QName.valueOf(annotationName));
 	}
+
+public static HttpRequestAttributes getHttpRequestAttributes(EnrichedServerNotification notification) {
+    Object value = notification.getEvent().getMessage().getAttributes().getValue();
+    if (value instanceof HttpRequestAttributes) {
+        return (HttpRequestAttributes) value;
+    } else {
+        return null;
+    }
+}
+public static double getDuration(EnrichedServerNotification notification) {
+    try {
+        // Use notification timestamp as a fallback
+        long startTimeMillis = notification.getTimestamp();
+        long endTimeMillis = System.currentTimeMillis(); // Assume current time as the end time
+
+        return endTimeMillis - startTimeMillis;
+    } catch (Exception e) {
+        logger.error("Failed to calculate duration for notification: {}", notification, e);
+        return 0;
+    }
+}
 }

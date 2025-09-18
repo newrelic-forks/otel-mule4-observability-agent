@@ -8,6 +8,7 @@ import org.mule.extension.otel.mule4.observablity.agent.internal.config.resource
 import org.mule.extension.otel.mule4.observablity.agent.internal.connection.OTelMule4ObservablityAgentConnectionProvider;
 import org.mule.extension.otel.mule4.observablity.agent.internal.connection.OtelSdkConnection;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricErrors;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricHttp;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricLatency;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricMemoryUsage;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricSystemWorkload;
@@ -27,6 +28,7 @@ import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import io.opentelemetry.api.OpenTelemetry;
 
@@ -189,6 +191,8 @@ OpenTelemetry otel = otelSdkConnectionInstance.getOpenTelemetry().orElseThrow(()
 	MuleMetricErrors.setInstance(otel);
 	MuleMetricMemoryUsage.setInstance(otel);
 	MuleMetricSystemWorkload.setInstance(otel);
+	MuleMetricHttp.setInstance(otel); // Ensure HTTP metrics are initialized
+	logger.info("All metrics initialized successfully");
 		//------------------------------------------------------------------------------
 		// Skip the startup if tracing is disabled
 		//------------------------------------------------------------------------------

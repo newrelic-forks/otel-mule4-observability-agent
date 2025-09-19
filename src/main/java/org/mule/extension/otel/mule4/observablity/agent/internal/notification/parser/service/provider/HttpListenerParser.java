@@ -13,6 +13,7 @@ import org.mule.extension.otel.mule4.observablity.agent.internal.context.propaga
 import org.mule.extension.otel.mule4.observablity.agent.internal.context.propagation.OTelContextPropagator;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricHttp;
 import org.mule.extension.otel.mule4.observablity.agent.internal.store.config.MuleConnectorConfigStore;
+import org.mule.extension.otel.mule4.observablity.agent.internal.store.trace.MuleSoftTraceStore;
 import org.mule.extension.otel.mule4.observablity.agent.internal.util.Constants;
 import org.mule.extension.otel.mule4.observablity.agent.internal.util.NotificationParserUtils;
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -42,8 +43,8 @@ public class HttpListenerParser extends BaseNotificationParser
 		// ----------------------------------------------------------------------------------------
 		// Only parse HTTP Listener notifications which are a source/trigger to the start of a flow
 		// ----------------------------------------------------------------------------------------
-		if ( sourceComponent.equalsIgnoreCase(Constants.HTTP_LISTENER)  && 
-				action == PipelineMessageNotification.PROCESS_START )
+		if (sourceComponent.equalsIgnoreCase(Constants.HTTP_LISTENER) && 
+			(action == PipelineMessageNotification.PROCESS_START || action == PipelineMessageNotification.PROCESS_COMPLETE))
 		{
 			return true;
 		}
@@ -78,13 +79,6 @@ public class HttpListenerParser extends BaseNotificationParser
 		{
 			logger.debug(e.getMessage());
 		}
-
-		try {
-        double durationMs = NotificationParserUtils.getDuration(notification);
-        recordHttpServerMetrics(notification, durationMs);
-    } catch (Exception e) {
-        logger.error("Failed to record HTTP server metrics: {}", e.getMessage(), e);
-    }
 
 		return spanBuilder;
 	}
@@ -173,10 +167,9 @@ public class HttpListenerParser extends BaseNotificationParser
     return spanBuilder;
 }
 // OTEL-Semantic-Metric Fix-Begin: Add HTTP server metrics
-private void recordHttpServerMetrics(EnrichedServerNotification notification, double durationMs) {
-    HttpRequestAttributes httpRequestAttributes = NotificationParserUtils.getHttpRequestAttributes(notification);
+private void recordHttpServerMetrics(HttpRequestAttributes httpRequestAttributes, double durationMs) {
     if (httpRequestAttributes == null) {
-        logger.warn("HttpRequestAttributes are null for notification: {}", notification);
+        logger.warn("HttpRequestAttributes are null");
         return;
     }
 
@@ -196,10 +189,11 @@ private void recordHttpServerMetrics(EnrichedServerNotification notification, do
             logger.warn("Failed to parse status code: {}", statusCodeStr, e);
         }
     } else {
-        logger.warn("Missing status code in HTTP headers for notification: {}", notification);
+        logger.warn("Missing status code in HTTP headers");
     }
 
     // Record required metric: http.server.request.duration
+	logger.info("Recording HTTP server request duration: {} ms with attributes: {}", durationMs, attributes);
     MuleMetricHttp.getInstance().recordHttpServerRequest(durationMs, attributes);
 
     // Record optional metric: http.server.request.body.size
@@ -231,5 +225,24 @@ private void recordHttpServerMetrics(EnrichedServerNotification notification, do
     logger.debug("Recorded HTTP server metrics for route: {}", httpRequestAttributes.getListenerPath());
 }
 // OTEL-Semantic-Metric Fix-End
+
+   @Override
+    public void endPipelineNotification(EnrichedServerNotification notification, MuleSoftTraceStore traceStore) 
+    {
+		logger.info("Ending pipeline notification for: {}", notification);
+        super.endPipelineNotification(notification, traceStore);
+        try {
+            String mulesoftTraceId = NotificationParserUtils.getMuleSoftTraceId(notification);
+            String flowId = NotificationParserUtils.getFlowId(notification);
+            java.time.Instant startInstant = traceStore.getPipelineStartInstant(mulesoftTraceId, flowId);
+            java.time.Instant endInstant = NotificationParserUtils.getInstantFrom(notification);
+            double durationMs = java.time.Duration.between(startInstant, endInstant).toMillis();
+            HttpRequestAttributes attributes = traceStore.getHttpRequestAttributes(mulesoftTraceId, flowId);
+            recordHttpServerMetrics(attributes, durationMs);
+        } catch (Exception e) {
+            logger.error("Failed to record HTTP server metrics: {}", e.getMessage(), e);
+        }
+    }
+
 
 }

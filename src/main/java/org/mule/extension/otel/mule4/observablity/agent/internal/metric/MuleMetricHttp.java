@@ -101,7 +101,7 @@ public class MuleMetricHttp {
      */
     public void recordHttpServerRequest(double durationMs, Attributes attributes) {
         if (httpServerRequestDuration != null) {
-            logger.debug("Recording HTTP server request duration: {} ms with attributes: {}", durationMs, attributes);
+            logger.info("Recording HTTP server request duration: {} ms with attributes: {}", durationMs, attributes);
             httpServerRequestDuration.record(durationMs, attributes);
         }
     }

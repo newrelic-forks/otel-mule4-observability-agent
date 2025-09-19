@@ -50,13 +50,6 @@ public class HttpRequesterParser extends BaseNotificationParser
 		super.startProcessorNotification(notification, muleConnectorConfigStore, spanBuilder);
 		
 		spanBuilder.setSpanKind(SpanKind.CLIENT);
-
-		try {
-        double durationMs = NotificationParserUtils.getDuration(notification);
-        recordHttpClientMetrics(notification, durationMs);
-    } catch (Exception e) {
-        logger.error("Failed to record HTTP client metrics: {}", e.getMessage(), e);
-    }
 		
 		return addHttpRequesterAttributesToSpan(notification, muleConnectorConfigStore, spanBuilder);
 	}
@@ -69,6 +62,18 @@ public class HttpRequesterParser extends BaseNotificationParser
 	{
 		super.endProcessorNotification(notification, traceStore);
 		addHttpResponseAttributesToSpan(notification, traceStore);
+		
+		try {
+			String mulesoftTraceId = NotificationParserUtils.getMuleSoftTraceId(notification);
+			String flowId = NotificationParserUtils.getFlowId(notification);
+			String spanId = NotificationParserUtils.getSpanId(notification);
+			java.time.Instant startInstant = traceStore.getMessageProcessorStartInstant(mulesoftTraceId, flowId, spanId);
+			java.time.Instant endInstant = NotificationParserUtils.getInstantFrom(notification);
+			double durationMs = java.time.Duration.between(startInstant, endInstant).toMillis();
+			recordHttpClientMetrics(notification, durationMs);
+		} catch (Exception e) {
+			logger.error("Failed to record HTTP client metrics: {}", e.getMessage(), e);
+		}
 	}
 
 	// --------------------------------------------------------------------------------------------

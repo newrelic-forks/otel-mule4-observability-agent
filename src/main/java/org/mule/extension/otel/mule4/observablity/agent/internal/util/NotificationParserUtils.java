@@ -233,16 +233,5 @@ public static HttpRequestAttributes getHttpRequestAttributes(EnrichedServerNotif
         return null;
     }
 }
-public static double getDuration(EnrichedServerNotification notification) {
-    try {
-        // Use notification timestamp as a fallback
-        long startTimeMillis = notification.getTimestamp();
-        long endTimeMillis = System.currentTimeMillis(); // Assume current time as the end time
 
-        return endTimeMillis - startTimeMillis;
-    } catch (Exception e) {
-        logger.error("Failed to calculate duration for notification: {}", notification, e);
-        return 0;
-    }
-}
 }

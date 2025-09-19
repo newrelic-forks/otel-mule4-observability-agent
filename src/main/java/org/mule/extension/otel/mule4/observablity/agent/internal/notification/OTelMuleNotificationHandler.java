@@ -29,6 +29,7 @@ import java.time.Duration;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricErrors;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricLatency;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricTraffic;
+import org.mule.extension.http.api.HttpRequestAttributes;
 
 public class OTelMuleNotificationHandler
 {
@@ -184,10 +185,12 @@ public class OTelMuleNotificationHandler
 				logger.debug(e.getMessage());
 			}
 			
+			HttpRequestAttributes attributes = NotificationParserUtils.getHttpRequestAttributes(notification);
 			traceStore.startTrace(NotificationParserUtils.getMuleSoftTraceId(notification),
 		              NotificationParserUtils.getFlowId(notification),
 		              spanBuilder.startSpan(),
-                    startInstant);
+                    startInstant,
+					attributes);
 		} 
 		else
 		{
@@ -200,10 +203,12 @@ public class OTelMuleNotificationHandler
 				logger.debug(e.getMessage());
 			}
 			
+			HttpRequestAttributes attributes = NotificationParserUtils.getHttpRequestAttributes(notification);
 			traceStore.addPipelineSpan(NotificationParserUtils.getMuleSoftTraceId(notification),
 	                   NotificationParserUtils.getFlowId(notification),
 	                   spanBuilder,
-                    startInstant); // PASS START INSTANT HERE
+                    startInstant,
+					attributes);
 		}
 	}
 
@@ -212,7 +217,7 @@ public class OTelMuleNotificationHandler
 	// --------------------------------------------------------------------------------------------
 	public void handleFlowEndEvent(PipelineMessageNotification notification)
 	{
-		logger.debug("Handling flow end event");
+		logger.info("Handling flow end event");
 
 		String mulesoftTraceId = NotificationParserUtils.getMuleSoftTraceId(notification);
         String flowId = NotificationParserUtils.getFlowId(notification);
@@ -233,8 +238,12 @@ public class OTelMuleNotificationHandler
         // Record Flow Error if an exception occurred (NEW)
         if (flowException != null) {
             MuleMetricErrors.getInstance().recordFlowError();
-            logger.debug("Recorded flow error for flow: {}", flowName);
+            logger.info("Recorded flow error for flow: {}", flowName);
         }
+
+		NotificationParser notificationParser = NotificationParserService.getInstance().getParserFor(notification)
+				.orElse(new BaseNotificationParser());
+		notificationParser.endPipelineNotification(notification, getMuleSoftTraceStore());
 
 		traceStore.endPipelineSpan(mulesoftTraceId,
 				                   flowId, // Use flowId here

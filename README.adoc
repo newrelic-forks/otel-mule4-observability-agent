@@ -48,6 +48,61 @@ Issues* to provide feedback, suggest enhancements or report a bug.
 
 ## Release Notes
 
+### Version 1.5.2 [New Relic Labs ]
+
+#### ✨ **New Features & Enhancements in v1.5.2**
+
+This version enhances APM integration by aligning with OpenTelemetry semantic conventions and provides robust support for distributed tracing across your Mule applications.
+
+1.  **OTEL Semantic Metrics for APM Transaction View**:
+    *   The agent now correctly calculates the duration of HTTP-triggered flows and captures standard OpenTelemetry HTTP attributes (`http.request.method`, `url.scheme`, `http.route`, `http.response.status_code`).
+    *   This ensures that transactions in New Relic APM are accurately named, grouped, and measured, providing a clear view of your application's web services.
+
+2.  **Enhanced Distributed Tracing Support**:
+    *   Full support for W3C Trace Context headers (`traceparent`, `tracestate`) to ensure seamless distributed traces.
+    *   To enable this, you need to configure your Mule flows to propagate these headers.
+
+#### **Configuration for Distributed Tracing**
+
+To ensure distributed traces are correctly propagated to downstream services, you must configure your **HTTP Request** components to pass the `traceparent` and `tracestate` headers.
+
+**HTTP Request Configuration:**
+
+In your HTTP Request configuration, you need to define the `traceparent` and `tracestate` headers and set their values using DataWeave expressions that retrieve them from `vars`. The agent makes these variables available automatically.
+
+1.  Go to the **Headers** tab of your HTTP Request component.
+2.  Click the "Add" button to add a new header.
+3.  Set the header **Name** to `traceparent`.
+4.  Set the **Value** to the DataWeave expression: `#[vars.OTEL_TRACE_CONTEXT.traceparent default '' as String]`
+5.  Repeat the process for the `tracestate` header with the value `#[vars.OTEL_TRACE_CONTEXT.tracestate default '' as String]`.
+
+This ensures the trace context is passed to the next service in the chain.
+
+#### **Applying as a Global Policy (Enterprise Feature)**
+
+For customers with an enterprise license, this agent can be applied as a global policy to all APIs within your environment, ensuring consistent observability without modifying each application's `pom.xml`.
+
+**Steps to apply as a Global Policy:**
+
+1.  **Package the Agent**: Ensure the agent is packaged as a Mule plugin (`-mule-plugin.jar`).
+2.  **Upload to Anypoint Exchange**: Publish the agent's Mule plugin to your organization's Anypoint Exchange.
+3.  **Apply the Policy**: In API Manager, select the API you want to apply the policy to, navigate to "Policies", click "Apply New Policy", and select the "OpenTelemetry Observability Agent" policy.
+4.  **Configure**: Once applied, configure the OTel exporter endpoint and other settings as required.
+
+[NOTE]
+This feature is intended for MuleSoft enterprise customers. Due to license limitations, this could not be fully tested in a trial environment but is based on standard MuleSoft policy application procedures.
+
+- **Add following dependency to applications pom.xml**
+
+```xml
+  <dependency>
+      <groupId>com.newrelic.labs</groupId>
+      <artifactId>otel-mule4-observability-agent</artifactId>
+      <version>1.5.2</version>
+      <classifier>mule-plugin</classifier>
+  </dependency>
+```
+
 ### Version 1.5.0 [New Relic Labs ]
 
 #### ✨ **New Features & Enhancements in v1.5.0**

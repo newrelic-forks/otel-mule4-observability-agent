@@ -193,7 +193,7 @@ private void recordHttpServerMetrics(HttpRequestAttributes httpRequestAttributes
     }
 
     // Record required metric: http.server.request.duration
-	logger.info("Recording HTTP server request duration: {} ms with attributes: {}", durationMs, attributes);
+	logger.debug("Recording HTTP server request duration: {} ms with attributes: {}", durationMs, attributes);
     MuleMetricHttp.getInstance().recordHttpServerRequest(durationMs, attributes);
 
     // Record optional metric: http.server.request.body.size

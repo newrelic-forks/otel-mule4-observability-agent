@@ -55,7 +55,7 @@ Issues* to provide feedback, suggest enhancements or report a bug.
 This version enhances APM integration by aligning with OpenTelemetry semantic conventions and provides robust support for distributed tracing across your Mule applications.
 
 1.  **OTEL Semantic Metrics for APM Transaction View**:
-    *   The agent now correctly calculates the duration of HTTP-triggered flows and captures standard OpenTelemetry HTTP attributes (`http.request.method`, `url.scheme`, `http.route`, `http.response.status_code`).
+    *   The agent now correctly calculates the duration of HTTP-triggered flows and captures standard OpenTelemetry HTTP attributes (`http.request.server.duration, http.request.method`, `url.scheme`, `http.route`, `http.response.status_code` ...).
     *   This ensures that transactions in New Relic APM are accurately named, grouped, and measured, providing a clear view of your application's web services.
 
 2.  **Enhanced Distributed Tracing Support**:

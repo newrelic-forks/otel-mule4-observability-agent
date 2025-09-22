@@ -265,7 +265,7 @@ public final class OtelSdkConnection
 	 * 	Span
 	 * </a>  
 	 * @see	
-	 * <a href=https://javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/Context.html>
+	 * <a href=https="https://javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/Context.html>
 	 * 	Context
 	 * </a>  
 	 */
@@ -286,11 +286,11 @@ public final class OtelSdkConnection
 	 * 
 	 * @return Optional&#60;TextMapPropagator&#62;
 	 * @see	
-	 * <a href=https://javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/propagation/TextMapPropagator.html>
+	 * <a href=https="https://javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/propagation/TextMapPropagator.html>
 	 * 	TextMapPropagator
 	 * </a>  
 	 * @see	
-	 * <a href=https://javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/Context.html>
+	 * <a href=https="https://javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/Context.html>
 	 * 	Context
 	 * </a>  
 	 */
@@ -321,5 +321,9 @@ public final class OtelSdkConnection
 	public Optional<CustomAttributesConfig> getCustomAttributesConfig()
 	{
 	    return Optional.ofNullable(customAttributesConfig);
+	}
+	
+	public Optional<OpenTelemetry> getOpenTelemetry() {
+	    return Optional.ofNullable(openTelemetry);
 	}
 }

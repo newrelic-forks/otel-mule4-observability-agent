@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -284,46 +285,56 @@ public class MuleConnectorConfigStore
     //------------------------------------------------------------------------------------------------
     public static class AnypointMQConfig
     {
-        private String clientId;
-        private URL url;
-        
-        public AnypointMQConfig(String url, String clientId) throws MalformedURLException
-        {
-            this.url = new URL(resolveProperty(url));
-            this.clientId = resolveProperty(clientId);
-        }
-        
-        public String getClientId()
-        {
-            return clientId;
-        }
-        
-        public String getUrl()
-        {
-            return url.toExternalForm();
-        }
-        
-        public String getHost()
-        {
-            return url.getHost();
-        }
-        
-        public String getPort()
-        {
-            int port = url.getPort();
-            
-            return (port == -1) ? Integer.toString(url.getDefaultPort()) : Integer.toString(port);
-        }
-        
-        public String getProtocol()
-        {
-            return url.getProtocol();
-        }
-        
-        public String getPath()
-        {
-            return url.getPath();
-        }
+		private String clientId;
+		private URL url;
+		private Map<String, String> userProperties; // For OTEL context propagation
+
+		public AnypointMQConfig(String url, String clientId) throws MalformedURLException
+		{
+			this.url = new URL(resolveProperty(url));
+			this.clientId = resolveProperty(clientId);
+			this.userProperties = null;
+		}
+
+		public String getClientId()
+		{
+			return clientId;
+		}
+
+		public String getUrl()
+		{
+			return url.toExternalForm();
+		}
+
+		public String getHost()
+		{
+			return url.getHost();
+		}
+
+		public String getPort()
+		{
+			int port = url.getPort();
+			return (port == -1) ? Integer.toString(url.getDefaultPort()) : Integer.toString(port);
+		}
+
+		public String getProtocol()
+		{
+			return url.getProtocol();
+		}
+
+		public String getPath()
+		{
+			return url.getPath();
+		}
+
+		// --- OTEL context propagation support ---
+		public Map<String, String> getUserProperties() {
+			return userProperties;
+		}
+
+		public void setUserProperties(Map<String, String> userProperties) {
+			this.userProperties = userProperties;
+		}
     }
     
 
@@ -335,12 +346,24 @@ public class MuleConnectorConfigStore
 		private String host;
 		private String port;
 		private String protocol;
-		
+		private Map<String, List<String>> headers; // Use standard Java Map
+
 		public HttpRequesterConfig(String host, String port, String protocol)
 		{
-		    this.host = resolveProperty(host);
-		    this.port = resolveProperty(port);
-		    this.protocol = resolveProperty(protocol);
+			this.host = resolveProperty(host);
+			this.port = resolveProperty(port);
+			this.protocol = resolveProperty(protocol);
+			this.headers = null;
+		}
+
+		public Map<String, List<String>> getHeaders()
+		{
+			return headers;
+		}
+
+		public void setHeaders(Map<String, List<String>> headers)
+		{
+			this.headers = headers;
 		}
 		
 		public String getHost()

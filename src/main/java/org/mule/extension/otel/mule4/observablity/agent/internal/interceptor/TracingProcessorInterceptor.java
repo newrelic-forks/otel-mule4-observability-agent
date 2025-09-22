@@ -50,24 +50,29 @@ public class TracingProcessorInterceptor implements ProcessorInterceptor
 			//	list but they are not being honored in the outgoing HTTP Request.
 			// ----------------------------------------------------------------------------------------
 			
-			/*
+			
 			Map<String, String> traceContextMap = TypedValue.unwrap(event.getVariables()
 					                                                     .get(Constants.TRACE_CONTEXT_MAP_KEY));
 			
-			MultiMap<String, String> headers = new MultiMap<>();
 			
-			headers.put(Constants.TRACEPARENT, traceContextMap.get(Constants.TRACEPARENT));
-			headers.put(Constants.TRACESTATE, traceContextMap.get(Constants.TRACESTATE));
+			
+			
 			
 			ProcessorParameterValue processorParameterValue = parameters.get("requestBuilder");
-			
 			HttpRequesterRequestBuilder httpRequestBuilder = (HttpRequesterRequestBuilder) processorParameterValue.resolveValue();
+			MultiMap<String, String> headers = httpRequestBuilder.getHeaders();
 			
+			if (headers == null) {
+				headers = new MultiMap<>();
+			}
+			headers.put(Constants.TRACEPARENT, traceContextMap.get(Constants.TRACEPARENT));
+			headers.put(Constants.TRACESTATE, traceContextMap.get(Constants.TRACESTATE));
+			logger.debug("Headers before setting: " + headers.toString());
 			httpRequestBuilder.setHeaders(headers);
 			//event.addVariable(Constants.HTTP_REQUEST_BUILDER, httpRequestBuilder);
-			
+			logger.debug("Headers after setting: " + headers.toString());
 			logger.debug("before::Intercepted a HTTP Request processor");
-			*/
+			event.addVariable(Constants.HTTP_REQUEST_BUILDER, httpRequestBuilder);
 		}	
 	}
 

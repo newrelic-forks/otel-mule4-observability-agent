@@ -22,9 +22,9 @@ public class MuleMetricTraffic {
      * @param openTelemetry The OpenTelemetry instance for metric creation.
      */
     private MuleMetricTraffic(OpenTelemetry openTelemetry) {
-        logger.info("Initializing the Traffic Metrics");
         Meter meter = openTelemetry.getMeter("org.mulesoft.extension.otel.mule4.observability.agent.metrics");
 
+        // Mandatory: Throughput
         flowTrafficCounter = meter.counterBuilder("mule.flow.traffic.total")
                 .setDescription("Total number of Mule flow executions.")
                 .setUnit("1")

@@ -15,6 +15,11 @@ public class AnypointMQMessageAttributesGetter implements TextMapGetter<Anypoint
 	@Override
 	public String get(AnypointMQMessageAttributes carrier, String key)
 	{
-		return (String) carrier.getProperties().get(key);
+		for (String prop : carrier.getProperties().keySet()) {
+			if (prop.equalsIgnoreCase(key)) {
+				return (String) carrier.getProperties().get(prop);
+			}
+		}
+		return null;
 	}
 }

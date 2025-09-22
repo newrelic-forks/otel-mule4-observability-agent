@@ -2,6 +2,8 @@ package org.mule.extension.otel.mule4.observablity.agent.internal.notification.p
 
 import java.util.Map;
 
+import org.mule.extension.otel.mule4.observablity.agent.internal.context.propagation.OTelContextPropagator;
+import org.mule.extension.otel.mule4.observablity.agent.internal.context.propagation.SimpleHashMapSetter;
 import org.mule.extension.otel.mule4.observablity.agent.internal.store.config.MuleConnectorConfigStore;
 import org.mule.extension.otel.mule4.observablity.agent.internal.store.trace.MuleSoftTraceStore;
 import org.mule.extension.otel.mule4.observablity.agent.internal.util.Constants;
@@ -57,7 +59,7 @@ public class AnypointMQPublishParser extends BaseNotificationParser
     {
         Map<String, String> anypointMQAttributes = NotificationParserUtils.getComponentAnnotation("{config}componentParameters", notification);
         String configRef = anypointMQAttributes.get("config-ref");
-    
+
         MuleConnectorConfigStore.AnypointMQConfig anypointMQConfig = muleConnectorConfigStore.getConfig(configRef);
 
         try 
@@ -68,7 +70,22 @@ public class AnypointMQPublishParser extends BaseNotificationParser
             spanBuilder.setAttribute("publish.path", anypointMQConfig.getPath());            
             spanBuilder.setAttribute("publish.clientId", anypointMQConfig.getClientId());            
           
-            spanBuilder.setAttribute("publish.destination", anypointMQAttributes.get("destination"));
+            spanBuilder.setAttribute("messaging.system", "anypointmq");
+            spanBuilder.setAttribute("messaging.destination", anypointMQAttributes.get("destination"));
+            spanBuilder.setAttribute("messaging.destination_kind", "queue"); // or "topic"
+            spanBuilder.setAttribute("messaging.operation", "send");
+            spanBuilder.setAttribute("net.peer.name", anypointMQConfig.getHost());
+            spanBuilder.setAttribute("net.peer.port", anypointMQConfig.getPort());
+            spanBuilder.setAttribute("messaging.url", anypointMQConfig.getPath());
+            spanBuilder.setAttribute("messaging.client_id", anypointMQConfig.getClientId());        
+            // Inject context into outgoing HTTP headers
+         // Inject context into outgoing MQ message properties
+        Map<String, String> userProperties = anypointMQConfig.getUserProperties();
+        if (userProperties == null) {
+            userProperties = new java.util.HashMap<>();
+            anypointMQConfig.setUserProperties(userProperties); // --- FIX: Set back to config
+        }
+        OTelContextPropagator.inject(userProperties, new SimpleHashMapSetter());
         }
         catch (Exception e)
         {
@@ -97,17 +114,24 @@ public class AnypointMQPublishParser extends BaseNotificationParser
     private void addMQPublishResponseAttributesToSpan(EnrichedServerNotification notification, MuleSoftTraceStore traceStore)
     {
         AnypointMQMessagePublishAttributes mqPublishAttributes = NotificationParserUtils.getMessageAttributes(notification);
-        
+        Map<String, String> userProperties = new java.util.HashMap<>();
+        try {
+            OTelContextPropagator.inject(userProperties, new SimpleHashMapSetter());
+        } catch (Exception e) {
+            logger.debug(e.getMessage());
+        }
+
         Span span = traceStore.getMessageProcessorSpan(NotificationParserUtils.getMuleSoftTraceId(notification), 
                                                        NotificationParserUtils.getFlowId(notification), 
                                                        NotificationParserUtils.getSpanId(notification));
         try
         {    
-            span.setAttribute("publish.response.messageId", mqPublishAttributes.getMessageId());
+            span.setAttribute("messaging.message_id", mqPublishAttributes.getMessageId());
         }
         catch (Exception e)
         {
             logger.debug(e.getMessage());
         }
-    }    
+    }
+   
 }

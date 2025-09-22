@@ -7,7 +7,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.api.trace.Span;
-
+import org.mule.extension.http.api.HttpRequestAttributes;
 import org.mule.extension.otel.mule4.observablity.agent.internal.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,13 +48,14 @@ public class MuleSoftTraceStore {
 	// ------------------------------------------------------------------------
 	private class MuleSoftTrace {
 		private Span traceRootSpan;
-
 		private Map<String, PipelineSpan> pipelineSpans = new ConcurrentHashMap<>();
 
-		private MuleSoftTrace(String rootSpanId, Span rootSpan, Instant startInstant) {
+		// START: MuleSoftTrace constructor change
+		private MuleSoftTrace(String rootSpanId, Span rootSpan, Instant startInstant, HttpRequestAttributes attributes) {
 			this.traceRootSpan = rootSpan;
-			pipelineSpans.put(rootSpanId, new PipelineSpan(rootSpan, startInstant)); // Pass startInstant
+			pipelineSpans.put(rootSpanId, new PipelineSpan(rootSpan, startInstant, attributes));
 		}
+		// END: MuleSoftTrace constructor change
 
 		private Span getRootSpan() {
 			return traceRootSpan;
@@ -64,9 +65,11 @@ public class MuleSoftTraceStore {
 			return pipelineSpans.isEmpty();
 		}
 
-		private void putPipelineSpan(String pipelineSpanId, Span pipelineSpan, Instant startInstant) {
-			pipelineSpans.put(pipelineSpanId, new PipelineSpan(pipelineSpan, startInstant)); // Pass startInstant
+		// START: putPipelineSpan method change
+		private void putPipelineSpan(String pipelineSpanId, Span pipelineSpan, Instant startInstant, HttpRequestAttributes attributes) {
+			pipelineSpans.put(pipelineSpanId, new PipelineSpan(pipelineSpan, startInstant, attributes));
 		}
+		// END: putPipelineSpan method change
 
 		private PipelineSpan removePipelineSpan(String pipelineSpanId) {
 			return pipelineSpans.remove(pipelineSpanId);
@@ -78,7 +81,6 @@ public class MuleSoftTraceStore {
 
 		private void end() {
 			pipelineSpans.forEach((id, pipelineSpan) -> pipelineSpan.end());
-			// traceRootSpan.end();
 		}
 
 		// --------------------------------------------------------------------
@@ -88,25 +90,33 @@ public class MuleSoftTraceStore {
 		private class PipelineSpan {
 			private Span pipelineRootSpan;
 			private Instant pipelineStartInstant;
-			// private Map<String, Span> messageProcessorSpans = new ConcurrentHashMap<>();
+			// START: Add attributes field
+			private HttpRequestAttributes attributes;
+			// END: Add attributes field
 			private Map<String, MessageProcessorSpan> messageProcessorSpans = new ConcurrentHashMap<>();
 
-			private PipelineSpan(Span rootSpan, Instant startInstant) {
+			// START: PipelineSpan constructor change
+			private PipelineSpan(Span rootSpan, Instant startInstant, HttpRequestAttributes attributes) {
 				this.pipelineRootSpan = rootSpan;
-				this.pipelineStartInstant = startInstant; // SET THE FIELD
+				this.pipelineStartInstant = startInstant;
+				this.attributes = attributes;
 			}
+			// END: PipelineSpan constructor change
 
-			// ADD GETTER FOR PIPELINE START INSTANT
 			public Instant getPipelineStartInstant() {
 				return pipelineStartInstant;
 			}
 
-			// MODIFIED METHOD: Add startInstant parameter, use MessageProcessorSpan
+			// START: Add getAttributes method
+			public HttpRequestAttributes getAttributes() {
+				return attributes;
+			}
+			// END: Add getAttributes method
+
 			private void putSpan(String spanId, Span span, Instant startInstant) {
 				this.messageProcessorSpans.put(spanId, new MessageProcessorSpan(span, startInstant));
 			}
 
-			// MODIFIED METHOD: Change return type
 			private MessageProcessorSpan getSpan(String spanID) {
 				return this.messageProcessorSpans.get(spanID);
 			}
@@ -115,39 +125,28 @@ public class MuleSoftTraceStore {
 				return pipelineRootSpan;
 			}
 
-		
-
-			 private void endSpan(String spanId, Instant endInstant)
-	            {
-	                MessageProcessorSpan messageProcessorSpan = messageProcessorSpans.get(spanId);
-	                if (messageProcessorSpan != null) { // Added null check for safety
-	                    messageProcessorSpan.end(endInstant);
-	                }
-	            }
-
-		
-
-				private void end()
-				{
-					end(Instant.now(), null); // Corrected: Delegate to the overloaded method, passing null for exception
+			private void endSpan(String spanId, Instant endInstant) {
+				MessageProcessorSpan messageProcessorSpan = messageProcessorSpans.get(spanId);
+				if (messageProcessorSpan != null) {
+					messageProcessorSpan.end(endInstant);
 				}
+			}
 
-	            private void end(Instant endInstant, Exception e)
-	            {
-	                // Loop through MessageProcessorSpan and end them, passing endInstant
-	                messageProcessorSpans.forEach((id, processorSpan) -> processorSpan.end(endInstant));
-	                
-	                if (pipelineRootSpan != null) { // Add null check for pipelineRootSpan
-	                    if (e != null)
-	                    {
-	                        pipelineRootSpan.setStatus(StatusCode.ERROR, e.getMessage());
-	                        pipelineRootSpan.recordException(e);
-	                    }
-	                    pipelineRootSpan.setAttribute(Constants.END_DATETIME_ATTRIBUTE, endInstant.toString());
-	                    pipelineRootSpan.end(endInstant);
-	                }
+			private void end() {
+				end(Instant.now(), null);
+			}
+
+			private void end(Instant endInstant, Exception e) {
+				messageProcessorSpans.forEach((id, processorSpan) -> processorSpan.end(endInstant));
+				if (pipelineRootSpan != null) {
+					if (e != null) {
+						pipelineRootSpan.setStatus(StatusCode.ERROR, e.getMessage());
+						pipelineRootSpan.recordException(e);
+					}
+					pipelineRootSpan.setAttribute(Constants.END_DATETIME_ATTRIBUTE, endInstant.toString());
+					pipelineRootSpan.end(endInstant);
 				}
-				
+			}
 
 			private class MessageProcessorSpan {
 				private Span processorSpan;
@@ -204,12 +203,15 @@ public class MuleSoftTraceStore {
 	 * @param rootSpanId      - unique id for the root (parent) span for this trace
 	 * @param rootSpan        - the parent {@link Span}
 	 */
-	public void startTrace(String mulesoftTraceId, String rootSpanId, Span rootSpan, Instant startInstant) // ADD
-																											// startInstant
-																											// parameter
-	{
-		muleSoftTraces.put(mulesoftTraceId, new MuleSoftTrace(rootSpanId, rootSpan, startInstant)); // PASS startInstant
-	}
+	  // --------------------------------------------------------------------
+    // startTrace Method
+    // --------------------------------------------------------------------
+    // START: startTrace changes
+    public void startTrace(String mulesoftTraceId, String rootSpanId, Span rootSpan, Instant startInstant, HttpRequestAttributes attributes) {
+        muleSoftTraces.put(mulesoftTraceId, new MuleSoftTrace(rootSpanId, rootSpan, startInstant, attributes));
+    }
+    // END: startTrace changes
+
 
 	public Context getTraceContextFor(String mulesoftTraceId) {
 		Context context = Context.current();
@@ -229,20 +231,23 @@ public class MuleSoftTraceStore {
 	 */
 	public void endTrace(String mulesoftTraceId) {
 		MuleSoftTrace muleSoftTrace = muleSoftTraces.remove(mulesoftTraceId);
-		muleSoftTrace.end();
+		if (muleSoftTrace != null) {
+			muleSoftTrace.end();
+		}
 	}
 
-	// ------------------------------------------------------------------------
-	// Helper Methods for Pipeline Spans
-	// ------------------------------------------------------------------------
-	public void addPipelineSpan(String mulesoftTraceId, String pipelineId, SpanBuilder spanBuilder,
-			Instant startInstant) {
-		MuleSoftTrace muleSoftTrace = muleSoftTraces.get(mulesoftTraceId);
-
-		Span newSpan = spanBuilder.setParent(Context.current().with(muleSoftTrace.getRootSpan())).startSpan();
-
-		muleSoftTrace.putPipelineSpan(pipelineId, newSpan, startInstant); // PASS startInstant
-	}
+	  // --------------------------------------------------------------------
+    // addPipelineSpan Method
+    // --------------------------------------------------------------------
+    // START: addPipelineSpan changes
+    public void addPipelineSpan(String mulesoftTraceId, String pipelineId, SpanBuilder spanBuilder, Instant startInstant, HttpRequestAttributes attributes) {
+        MuleSoftTrace muleSoftTrace = muleSoftTraces.get(mulesoftTraceId);
+        if (muleSoftTrace != null) {
+            Span newSpan = spanBuilder.setParent(Context.current().with(muleSoftTrace.getRootSpan())).startSpan();
+            muleSoftTrace.putPipelineSpan(pipelineId, newSpan, startInstant, attributes);
+        }
+    }
+    // END: addPipelineSpan changes
 
 	// ADD NEW GETTER: To retrieve pipeline start instant for latency calculation
 	public Instant getPipelineStartInstant(String mulesoftTraceId, String pipelineId) {
@@ -255,36 +260,51 @@ public class MuleSoftTraceStore {
 		}
 		return null;
 	}
-
+ // --------------------------------------------------------------------
+    // getHttpRequestAttributes Method
+    // --------------------------------------------------------------------
+    // START: getHttpRequestAttributes changes
+    public HttpRequestAttributes getHttpRequestAttributes(String mulesoftTraceId, String pipelineId) {
+        MuleSoftTrace muleSoftTrace = muleSoftTraces.get(mulesoftTraceId);
+        if (muleSoftTrace != null) {
+            MuleSoftTrace.PipelineSpan pipelineSpan = muleSoftTrace.getPipelineSpan(pipelineId);
+            if (pipelineSpan != null) {
+                return pipelineSpan.getAttributes();
+            }
+        }
+        return null;
+    }
+    // END: getHttpRequestAttributes changes
 	public void endPipelineSpan(String mulesoftTraceId, String pipelineId) {
 		endPipelineSpan(mulesoftTraceId, pipelineId, Instant.now(), null);
 	}
 
 	public void endPipelineSpan(String mulesoftTraceId, String pipelineId, Instant endInstant, Exception e) {
 		MuleSoftTrace muleSoftTrace = muleSoftTraces.get(mulesoftTraceId);
-		MuleSoftTrace.PipelineSpan pipelineSpan = muleSoftTrace.removePipelineSpan(pipelineId);
-		pipelineSpan.end(endInstant, e);
+		if (muleSoftTrace != null) {
+			MuleSoftTrace.PipelineSpan pipelineSpan = muleSoftTrace.removePipelineSpan(pipelineId);
+			if (pipelineSpan != null) {
+				pipelineSpan.end(endInstant, e);
+			}
+		}
 	}
 
 	// ------------------------------------------------------------------------
 	// Helper Methods for Message Processor Spans
 	// ------------------------------------------------------------------------
-	public void addMessageProcessorSpan(String mulesoftTraceId, String pipelineId, String messageProcessorId,
-			SpanBuilder spanBuilder, Instant startInstant) {
+	public void addMessageProcessorSpan(String mulesoftTraceId, String pipelineId, String messageProcessorId, SpanBuilder spanBuilder, Instant startInstant) {
 		MuleSoftTrace muleSoftTrace = muleSoftTraces.get(mulesoftTraceId);
-		MuleSoftTrace.PipelineSpan pipelineSpan = muleSoftTrace.getPipelineSpan(pipelineId);
-
-		if (pipelineSpan != null) { // Added null check for safety
-			Span newMessageProcessorSpan = spanBuilder.setParent(Context.current().with(pipelineSpan.getRootSpan()))
-					.startSpan();
-
-			pipelineSpan.putSpan(messageProcessorId, newMessageProcessorSpan, startInstant); // PASS startInstant
+		if (muleSoftTrace != null) {
+			MuleSoftTrace.PipelineSpan pipelineSpan = muleSoftTrace.getPipelineSpan(pipelineId);
+			if (pipelineSpan != null) {
+				Span newMessageProcessorSpan = spanBuilder.setParent(Context.current().with(pipelineSpan.getRootSpan())).startSpan();
+				pipelineSpan.putSpan(messageProcessorId, newMessageProcessorSpan, startInstant);
+			}
 		}
 	}
 
 // ADD NEW GETTER: To retrieve message processor start instant for latency calculation
-	public Instant getMessageProcessorStartInstant(String mulesoftTraceId, String pipelineId,
-			String messageProcessorId) {
+	public Instant getMessageProcessorStartInstant(String mulesoftTraceId, String pipelineId, String messageProcessorId) {
 		MuleSoftTrace muleSoftTrace = muleSoftTraces.get(mulesoftTraceId);
 		if (muleSoftTrace != null) {
 			MuleSoftTrace.PipelineSpan pipelineSpan = muleSoftTrace.getPipelineSpan(pipelineId);
@@ -299,15 +319,31 @@ public class MuleSoftTraceStore {
 	}
 
 	public Span getMessageProcessorSpan(String mulesoftTraceId, String pipelineId, String messageProcessorId) {
-		return muleSoftTraces.get(mulesoftTraceId).getPipelineSpan(pipelineId).getSpan(messageProcessorId)
-				.getProcessorSpan(); // Access the actual span from the wrapper
+	    MuleSoftTrace trace = muleSoftTraces.get(mulesoftTraceId);
+	    if (trace == null) {
+	        logger.warn("No MuleSoftTrace found for traceId: " + mulesoftTraceId);
+	        return null;
+	    }
+	    MuleSoftTrace.PipelineSpan pipelineSpan = trace.getPipelineSpan(pipelineId);
+	    if (pipelineSpan == null) {
+	        logger.warn("No PipelineSpan found for pipelineId: " + pipelineId + " in traceId: " + mulesoftTraceId);
+	        return null;
+	    }
+	    MuleSoftTrace.PipelineSpan.MessageProcessorSpan spanWrapper = pipelineSpan.getSpan(messageProcessorId);
+	    if (spanWrapper == null) {
+	        logger.warn("No MessageProcessorSpan found for messageProcessorId: " + messageProcessorId + " in pipelineId: " + pipelineId);
+	        return null;
+	    }
+	    return spanWrapper.getProcessorSpan();
 	}
 
-	public void endMessageProcessorSpan(String mulesoftTraceId, String pipelineId, String messageProcessorId,
-			Instant endInstant) {
-		MuleSoftTrace.PipelineSpan pipelineSpan = muleSoftTraces.get(mulesoftTraceId).getPipelineSpan(pipelineId);
-		if (pipelineSpan != null) { // Added null check for safety
-			pipelineSpan.endSpan(messageProcessorId, endInstant);
+	public void endMessageProcessorSpan(String mulesoftTraceId, String pipelineId, String messageProcessorId, Instant endInstant) {
+		MuleSoftTrace muleSoftTrace = muleSoftTraces.get(mulesoftTraceId);
+		if (muleSoftTrace != null) {
+			MuleSoftTrace.PipelineSpan pipelineSpan = muleSoftTrace.getPipelineSpan(pipelineId);
+			if (pipelineSpan != null) {
+				pipelineSpan.endSpan(messageProcessorId, endInstant);
+			}
 		}
 	}
 }

@@ -21,6 +21,9 @@ import org.mule.extension.otel.mule4.observablity.agent.internal.config.advanced
 import org.mule.extension.otel.mule4.observablity.agent.internal.config.advanced.SpanGenerationConfig;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricMemoryUsage;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricSystemWorkload;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricCpuUtilization;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricGcDuration;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricThreadCount;
 import org.mule.extension.otel.mule4.observablity.agent.internal.util.Constants;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.config.MuleConfiguration;
@@ -135,6 +138,9 @@ public final class OtelSdkConnection
 		
 		MuleMetricMemoryUsage.setInstance(openTelemetry);
 		MuleMetricSystemWorkload.setInstance(openTelemetry);
+		MuleMetricCpuUtilization.setInstance(openTelemetry);
+		MuleMetricGcDuration.setInstance(openTelemetry);
+		MuleMetricThreadCount.setInstance(openTelemetry);
 		MuleMetricErrors.setInstance(openTelemetry);
 		MuleMetricTraffic.setInstance(openTelemetry);
 		MuleMetricLatency.setInstance(openTelemetry);

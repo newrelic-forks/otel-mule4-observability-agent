@@ -12,6 +12,9 @@ import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetr
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricLatency;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricMemoryUsage;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricSystemWorkload;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricCpuUtilization;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricGcDuration;
+import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricThreadCount;
 import org.mule.extension.otel.mule4.observablity.agent.internal.metric.MuleMetricTraffic;
 import org.mule.extension.otel.mule4.observablity.agent.internal.notification.OTelMuleNotificationHandler;
 import org.mule.extension.otel.mule4.observablity.agent.internal.notification.listener.MuleMessageProcessorNotificationListener;
@@ -191,6 +194,9 @@ OpenTelemetry otel = otelSdkConnectionInstance.getOpenTelemetry().orElseThrow(()
 	MuleMetricErrors.setInstance(otel);
 	MuleMetricMemoryUsage.setInstance(otel);
 	MuleMetricSystemWorkload.setInstance(otel);
+	MuleMetricCpuUtilization.setInstance(otel);
+	MuleMetricGcDuration.setInstance(otel);
+	MuleMetricThreadCount.setInstance(otel);
 	MuleMetricHttp.setInstance(otel); // Ensure HTTP metrics are initialized
 	logger.info("All metrics initialized successfully");
 		//------------------------------------------------------------------------------

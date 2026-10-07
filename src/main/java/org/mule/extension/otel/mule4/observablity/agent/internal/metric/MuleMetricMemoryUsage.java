@@ -60,7 +60,7 @@ public class MuleMetricMemoryUsage
     //------------------------------------------------------------------------------------------------
     /**
      * 
-     * @param openTelemetry instance
+     * @param ot OpenTelemetry instance
      */
     public static void setInstance(OpenTelemetry ot)
     {

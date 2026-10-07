@@ -1,4 +1,4 @@
-mvn clean deploy
+mvn clean deploy -Dmaven.javadoc.skip=true
 if [ $? -ne 0 ]; then
   echo "Maven deploy failed"
 fi

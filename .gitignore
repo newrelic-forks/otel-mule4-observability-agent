@@ -41,3 +41,21 @@ replay_pid*
 *.deprecated
 
 /target/
+
+# Local secrets / env
+.envrc
+
+# Personal editor/IDE state
+.vscode/
+.settings/org.eclipse.jdt.apt.core.prefs
+
+# Local scratch / notes - not part of the repo
+output_file.txt
+CLAUDE.md
+ARCHITECTURE_LEARNING_GUIDE.md
+ARCHITECTURE_GUIDE_CONFLUENCE.html
+ARCHITECTURE_GUIDE_CONFLUENCE.txt
+OutSystemBrowserAgent.js
+test.sh
+build_publishi_*.sh
+.pom.xml.swp

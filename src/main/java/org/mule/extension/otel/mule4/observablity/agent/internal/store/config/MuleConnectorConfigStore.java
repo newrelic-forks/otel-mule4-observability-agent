@@ -38,8 +38,6 @@ import org.apache.commons.io.filefilter.SuffixFileFilter;
  *  	<li> {@code HTTP Request Connector} </li>
  *      <li> {@code Anypoint MQ Connector} </li>
  *  </ul>
- *  
- *  @see #getInstance(MuleConfiguration)
  */
 
 

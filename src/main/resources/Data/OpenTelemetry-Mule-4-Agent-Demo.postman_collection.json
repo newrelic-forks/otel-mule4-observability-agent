@@ -6,7 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "http://mule-otel-extension-testapp.us-e1.cloudhub.io/test",
+			"name": "http://your-app.us-e1.cloudhub.io/test",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -22,10 +22,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://mule-otel-extension-testapp.us-e1.cloudhub.io/test",
+					"raw": "http://your-app.us-e1.cloudhub.io/test",
 					"protocol": "http",
 					"host": [
-						"mule-otel-extension-testapp",
+						"your-app",
 						"us-e1",
 						"cloudhub",
 						"io"
@@ -38,7 +38,7 @@
 			"response": []
 		},
 		{
-			"name": "http://mule-otel-extension-testapp-v53.us-e1.cloudhub.io/test",
+			"name": "http://your-app-v2.us-e1.cloudhub.io/test",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -54,10 +54,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://mule-otel-extension-testapp-v53.us-e1.cloudhub.io/test",
+					"raw": "http://your-app-v2.us-e1.cloudhub.io/test",
 					"protocol": "http",
 					"host": [
-						"mule-otel-extension-testapp-v53",
+						"your-app-v2",
 						"us-e1",
 						"cloudhub",
 						"io"
@@ -161,7 +161,7 @@
 			"response": []
 		},
 		{
-			"name": "http://mule-otel-extension-testapp-witherrors.us-e1.cloudhub.io/test/errors",
+			"name": "http://your-app-witherrors.us-e1.cloudhub.io/test/errors",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -177,10 +177,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://mule-otel-extension-testapp-witherrors.us-e1.cloudhub.io/test/errors",
+					"raw": "http://your-app-witherrors.us-e1.cloudhub.io/test/errors",
 					"protocol": "http",
 					"host": [
-						"mule-otel-extension-testapp-witherrors",
+						"your-app-witherrors",
 						"us-e1",
 						"cloudhub",
 						"io"

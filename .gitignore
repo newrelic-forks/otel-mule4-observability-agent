@@ -56,6 +56,7 @@ ARCHITECTURE_LEARNING_GUIDE.md
 ARCHITECTURE_GUIDE_CONFLUENCE.html
 ARCHITECTURE_GUIDE_CONFLUENCE.txt
 OutSystemBrowserAgent.js
-test.sh
+push_maven.sh
+build_publish.sh
 build_publishi_*.sh
 .pom.xml.swp
